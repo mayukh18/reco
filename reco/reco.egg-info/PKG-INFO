@@ -2,7 +2,7 @@ Metadata-Version: 1.0
 Name: reco
 Version: 0.1
 Summary: a simple yet powerful recommendation systems library in python
-Home-page: http://github.com/mayukh18/svd
+Home-page: http://github.com/mayukh18/reco
 Author: Mayukh Bhattacharyya
 Author-email: mayukh.superb@gmail.com
 License: MIT
