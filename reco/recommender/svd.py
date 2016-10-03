@@ -26,10 +26,7 @@ class SVDRecommender(object):
     no_of_features: the number of the biggest features that are to be taken for each user and
                     item. default value is 15.
 
-    method: 1. default: The mean for the item and the SVDRecommender prediction for the user-item pair
-                        from SVDRecommender are added with multiplication factor coeff.
-                        Refer to coeff.
-            2. 'zero': The mean for the item is deducted from the user-item pair value in
+    method: 1. default: The mean for the item is deducted from the user-item pair value in
                         the utility matrix. SVDRecommender is computed. With the computed values, the
                         mean for the item is added back to get the final result.
 
@@ -38,13 +35,6 @@ class SVDRecommender(object):
                 provided in the fit and predict method. The 'value' will be used only in the
                 fit method.
 
-    coeff:  used only in the default method. This is the proportion of the value predicted
-            by the SVDRecommender method that is added to (1-coeff)*(mean for the item) to get the
-            final prediction.
-
-            final_prediction = coeff*svd_prediction + (1-coeff)*(mean for the item)
-
-            default value is 0.25
 
     Attributes:
                 instantiation outside init:
@@ -60,13 +50,11 @@ class SVDRecommender(object):
     def __init__(self,
                  no_of_features=15,
                  method='default',
-                 coeff=0.25,
                  formatizer={'user':0,'item':1,'value':2}
                  ):
         self.parameters={"no_of_features", "method",
                      "coeff"}
         self.method = method
-        self.coeff = coeff
         self.no_of_features = no_of_features
         self.formatizer = formatizer
         self.item_means=list()
@@ -170,8 +158,8 @@ class SVDRecommender(object):
 
         matrix = masked_arr.filled(self.item_means)
 
-        # for the ZERO method
-        if self.method=='zero':
+        # for the default method
+        if self.method=='default':
             for i in range(matrix.shape[1]):
                 matrix[:,i] = matrix[:,i] - self.item_means[i]
 
@@ -213,7 +201,7 @@ class SVDRecommender(object):
         X=convert_to_array(X)
         values=list()
 
-        if self.method=='zero':
+        if self.method=='default':
             for i in range(len(X)):
                 user=super_str(X[i,self.formatizer['user']])
                 item=super_str(X[i,self.formatizer['item']])
@@ -229,32 +217,7 @@ class SVDRecommender(object):
                 if user in self.user_index:
                     if item in self.item_index:
                         temp=np.dot(self.Usk[self.user_index.index(user),:], self.skV[:,self.item_index.index(item)])
-                        temp = temp + self.user_means[self.user_index.index(user)]
-                        values.append(temp)
-                    else:
-                        values.append(self.user_means[self.user_index.index(user)])
-                elif item in self.item_index and user not in self.user_index:
-                    values.append(self.item_means[self.item_index.index(item)])
-                else:
-                    values.append(np.mean(self.item_means)*0.6 + np.mean(self.user_means)*0.4)
-
-        elif self.method=='default':
-            for i in range(len(X)):
-                user=super_str(X[i,self.formatizer['user']])
-                item=super_str(X[i,self.formatizer['item']])
-
-                # user and item in the test set may not always occur in the train set. In these cases
-                # we can not find those values from the utility matrix.
-                # That is why a check is necessary.
-                # 1. both user and item in train
-                # 2. only user in train
-                # 3. only item in train
-                # 4. none in train
-
-                if user in self.user_index:
-                    if item in self.item_index:
-                        temp=np.dot(self.Usk[self.user_index.index(user),:], self.skV[:,self.item_index.index(item)])
-                        temp = temp * self.coeff + self.user_means[self.user_index.index(user)] * (1-self.coeff)
+                        temp = temp + self.item_means[self.item_index.index(item)]
                         values.append(temp)
                     else:
                         values.append(self.user_means[self.user_index.index(user)])
