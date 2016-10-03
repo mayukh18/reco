@@ -7,7 +7,10 @@ setup(name='reco',
       author='Mayukh Bhattacharyya',
       author_email='mayukh.superb@gmail.com',
       license='MIT',
+      download_url = 'https://github.com/mayukh18/reco/tarball/0.1',
+      keywords=['recommendation'],
       packages=['reco'],
       install_requires=['numpy',
                         'pandas'],
-      zip_safe=False)
+      zip_safe=False
+      )
