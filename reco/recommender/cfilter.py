@@ -80,7 +80,7 @@ class CFRecommender():
         return out
 
 
-    def getRecommendations(self, user, score):
+    def getRecommendations(self, user, score=True, N=10):
 
         prefs = self.ratings
 
@@ -107,17 +107,17 @@ class CFRecommender():
         rankings.sort()
         rankings.reverse()
         if score==True:
-            return rankings
+            return rankings[:N]
         else:
             rank_pure={}
             for i in range(len(rankings)):
                 rank_pure[i]=rankings[i][1]
-            return rank_pure
+            return rank_pure[:N]
 
 
 
 
-    def topMatches(self, user, score = True):
+    def topMatches(self, user, score = True, N=10):
 
         scores_=[(self.engine(self.ratings,user,other),other) for other in self.ratings if other!=user]
 
@@ -125,9 +125,9 @@ class CFRecommender():
         scores_.reverse()
 
         if score==True:
-            return scores_
+            return scores_[:N]
         else:
             rank_pure={}
             for i in range(len(scores_)):
                 rank_pure[i]=scores_[i][1]
-            return rank_pure
+            return rank_pure[:N]
