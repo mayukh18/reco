@@ -6,17 +6,24 @@
 Welcome to reco's documentation!
 ================================
 
-Contents:
+reco is a recommendation systems library in python. It currently has SVD and Collaborative Filtering available. Explore and have fun.
+
+Installation
+------------
+
+Installing reco through pip is easy. Use a terminal or command prompt and type out ::
+
+   pip install reco
+
+After this you can import reco in your scripts.
+
+Modules
+-------------
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 1
 
+    Recommenders <recommender>
+    Metrics <metrics>
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
