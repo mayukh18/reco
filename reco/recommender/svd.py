@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from utils import super_str, convert_to_array, special_sort, dissimilarity
 from scipy.linalg import sqrtm
 
@@ -82,7 +83,7 @@ class SVDRecommender(object):
 
 
 
-    def create_utility_matrix(self,dataset_array,indices):
+    def create_utility_matrix(self, data, formatizer = {'user':0, 'item': 1, 'value': 2}):
 
         """
 
@@ -90,49 +91,38 @@ class SVDRecommender(object):
         :param indices:         pass the formatizer
         :return:                the utility matrix. 2D, n x m, n=users, m=items
         """
-        itemField=indices['item']
-        userField=indices['user']
-        valueField=indices['value']
+        itemField = formatizer['item']
+        userField = formatizer['user']
+        valueField = formatizer['value']
 
-        values=dict()
-        past_user=list()
-        past_item=list()
+        userList = data.ix[:,userField].tolist()
+        itemList = data.ix[:,itemField].tolist()
+        valueList = data.ix[:,valueField].tolist()
 
-        count=0
-        for i in range(0,len(dataset_array)):
-            item=str(dataset_array[i,itemField])
-            user=str(dataset_array[i,userField])
+        users = list(set(data.ix[:,userField]))
+        items = list(set(data.ix[:,itemField]))
 
-            if item not in past_item:
-                past_item.append(item)
-
-            if user not in past_user:
-                values[user]={}
-                past_user.append(user)
-            count=count+1
-
-            values[user][item]=float(dataset_array[i,valueField])
-
-        # assess size of the utility matrix
-        self.no_of_users=len(past_user)
-        self.no_of_items=len(past_item)
-        self.dictX=values
-
-        utilMat=np.empty((self.no_of_users,self.no_of_items))
-        utilMat[:]=np.nan
+        users_index = {users[i]: i for i in range(len(users))}
 
 
-        for user in values:
-            for item in values[user]:
-                utilMat[past_user.index(user),past_item.index(item)]=values[user][item]
 
-        self.user_index=past_user
-        self.item_index=past_item
+        pd_dict = {item: [np.nan for i in range(len(users))] for item in items}
 
-        return utilMat
+        for i in range(0,len(data)):
+            item = itemList[i]
+            user = userList[i]
+            value = valueList[i]
+
+            pd_dict[item][users_index[user]] = value
+            #print i
+
+        X = pd.DataFrame(pd_dict)
+        X.index = users
+
+        return X
 
 
-    def fit(self, X, formatizer = None):
+    def fit(self, X):
 
         """
         :param X: nx3 array-like. Each row has three elements in the order given by the
@@ -142,26 +132,27 @@ class SVDRecommender(object):
 
         :return: Does not return anything. Just fits the data and forms U, s, V by SVDRecommender
         """
-        if formatizer != None:
-            self.formatizer = formatizer
 
-        X=convert_to_array(X)
-        X=self.create_utility_matrix(X,self.formatizer)
+        self.users = list(X.index)
+        self.items = list(X.columns)
+
+        self.user_index = {self.users[i]: i for i in range(len(self.users))}
+        self.item_index = {self.items[i]: i for i in range(len(self.items))}
+
 
         mask=np.isnan(X)
         masked_arr=np.ma.masked_array(X, mask)
 
         self.item_means=np.mean(masked_arr, axis=0)
         self.user_means=np.mean(masked_arr, axis=1)
+        self.item_means_tiled = np.tile(self.item_means, (X.shape[0],1))
 
-        # the all important utility matrix or ratings matrix
-
-        matrix = masked_arr.filled(self.item_means)
+        # utility matrix or ratings matrix that can be fed to svd
+        self.utilMat = masked_arr.filled(self.item_means)
 
         # for the default method
         if self.method=='default':
-            for i in range(matrix.shape[1]):
-                matrix[:,i] = matrix[:,i] - self.item_means[i]
+            self.utilMat = self.utilMat - self.item_means_tiled
 
 
         # Singular Value Decomposition starts
@@ -169,22 +160,25 @@ class SVDRecommender(object):
         # the top matrices are cropped to take the greatest k rows or
         # columns. U, V, s are already sorted descending.
 
-        k=self.no_of_features
-        U, s, V=np.linalg.svd(matrix, full_matrices=False)
-        s=np.diag(s)
-        s=s[0:k,0:k]
-        U=U[:,0:k]
-        V=V[0:k,:]
+        k = self.no_of_features
+        U, s, V = np.linalg.svd(self.utilMat, full_matrices=False)
+        s = np.diag(s)
+        s = s[0:k,0:k]
+        U = U[:,0:k]
+        V = V[0:k,:]
 
         s_root=sqrtm(s)
 
         self.Usk=np.dot(U,s_root)
         self.skV=np.dot(s_root,V)
+        self.UsV = np.dot(self.Usk, self.skV)
+
+        self.UsV = self.UsV + self.item_means_tiled
 
 
 
 
-    def predict(self, X, formatizer = None):
+    def predict_ratings(self, X, formatizer = {'user': 0, 'item': 1}):
         """
 
         :param X: the test set. 2D, array-like consisting of two eleents in each row
@@ -195,16 +189,16 @@ class SVDRecommender(object):
         :return: 1D, a list giving the value/rating corresponding to each user-item
                  pair in each row of X.
         """
-        if formatizer != None:
-            self.formatizer = formatizer
 
-        X=convert_to_array(X)
-        values=list()
+        users = X.ix[:,formatizer['user']].tolist()
+        items = X.ix[:,formatizer['item']].tolist()
 
-        if self.method=='default':
-            for i in range(len(X)):
-                user=super_str(X[i,self.formatizer['user']])
-                item=super_str(X[i,self.formatizer['item']])
+        if self.method == 'default':
+
+            values = []
+            for i in range(len(users)):
+                user = users[i]
+                item = items[i]
 
                 # user and item in the test set may not always occur in the train set. In these cases
                 # we can not find those values from the utility matrix.
@@ -216,13 +210,13 @@ class SVDRecommender(object):
 
                 if user in self.user_index:
                     if item in self.item_index:
-                        temp=np.dot(self.Usk[self.user_index.index(user),:], self.skV[:,self.item_index.index(item)])
-                        temp = temp + self.item_means[self.item_index.index(item)]
-                        values.append(temp)
+                        values.append( self.UsV[self.user_index[user], self.item_index[item]] )
                     else:
-                        values.append(self.user_means[self.user_index.index(user)])
+                        values.append( self.user_means[ self.user_index[user] ] )
+
                 elif item in self.item_index and user not in self.user_index:
-                    values.append(self.item_means[self.item_index.index(item)])
+                    values.append( self.item_means[self.item_index[item] ])
+
                 else:
                     values.append(np.mean(self.item_means)*0.6 + np.mean(self.user_means)*0.4)
 
@@ -247,39 +241,53 @@ class SVDRecommender(object):
 
         if column=='user':
             if x not in self.user_index:
-                raise KeyError("Invalid user")
+                raise Exception("Invalid user")
             else:
                 for user in self.user_index:
-                    if user!=x:
-                        temp=dissimilarity(self.Usk[self.user_index.index(user),:], self.Usk[self.user_index.index(x),:], weighted=weight)
+                    if user != x:
+                        temp = dissimilarity(self.Usk[self.user_index[user],:], self.Usk[self.user_index[x],:], weighted=weight)
                         out.append((user, temp))
         if column=='item':
             if x not in self.item_index:
-                raise KeyError("Invalid item")
+                raise Exception("Invalid item")
             else:
                 for item in self.item_index:
-                    if item!=x:
-                        temp=dissimilarity(self.skV[:, self.item_index.index(item)], self.skV[:, self.item_index.index(x)], weighted=weight)
+                    if item != x:
+                        temp = dissimilarity(self.skV[:, self.item_index[item]], self.skV[:, self.item_index[x]], weighted=weight)
                         out.append((item, temp))
 
-        out=special_sort(out, order='ascending')
-        out=out[:N]
+        out = special_sort(out, order='ascending')
+        out = out[:N]
         return out
 
 
 
-    def topN_predict(self, user, N=10):
-        out=list()
-        if user not in self.user_index:
-            raise KeyError("Invalid user")
-        else:
-            for item in self.item_index:
-                    if item not in self.dictX[user]:
-                        temp=np.dot(self.Usk[self.user_index.index(user),:], self.skV[:,self.item_index.index(item)])
-                        out.append((item, temp))
+    def recommend(self, users_list, N=10, values = False):
 
-        out=special_sort(out,order='descending')
-        out=out[:N]
+        # utilMat element not zero means that element has already been
+        # discovered by the user and can not be recommended
+        predMat = np.ma.masked_where(self.utilMat != 0, self.UsV).filled(fill_value=-999)
+        out = []
+
+        if values == True:
+            for user in users_list:
+                try:
+                    j = self.user_index[user]
+                except:
+                    raise Exception("Invalid user:", user)
+                max_indices = predMat[j,:].argsort()[-N:][::-1]
+                out.append( [(self.items[index],predMat[j,index]) for index in max_indices ] )
+
+        else:
+            for user in users_list:
+                try:
+                    j = self.user_index[user]
+                except:
+                    raise Exception("Invalid user:", user)
+                max_indices = predMat[j,:].argsort()[-N:][::-1]
+                out.append( [self.items[index] for index in max_indices ] )
+
+
         return out
 
 
