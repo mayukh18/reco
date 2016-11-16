@@ -1,11 +1,11 @@
 import pandas as pd
+from os.path import join
+from os.path import dirname
 
-def load(dataset):
+def load_movielens(dataset):
 
-    if dataset == 'movielens100k':
-        out = pd.read_csv('movielens100k.csv')
-        return out
+    module_path = dirname(__file__)
+    full_filename = join(module_path, 'movielens100k.csv')
 
-    elif dataset == 'movielens1m':
-        out = pd.read_csv('movielens1m.csv')
-        return out
+    out = pd.read_csv(full_filename)
+    return out
