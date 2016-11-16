@@ -143,6 +143,8 @@ class SVDRecommender(object):
         mask=np.isnan(X)
         masked_arr=np.ma.masked_array(X, mask)
 
+        self.predMask = ~mask
+
         self.item_means=np.mean(masked_arr, axis=0)
         self.user_means=np.mean(masked_arr, axis=1)
         self.item_means_tiled = np.tile(self.item_means, (X.shape[0],1))
@@ -266,7 +268,7 @@ class SVDRecommender(object):
 
         # utilMat element not zero means that element has already been
         # discovered by the user and can not be recommended
-        predMat = np.ma.masked_where(self.utilMat != 0, self.UsV).filled(fill_value=-999)
+        predMat = np.ma.masked_where(self.predMask, self.UsV).filled(fill_value=-999)
         out = []
 
         if values == True:

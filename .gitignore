@@ -1,5 +1,7 @@
 .idea
 
 reco/reco.egg-info
+workspace/
+
 
 .pypirc

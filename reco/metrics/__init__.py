@@ -1,3 +1,5 @@
-from .metrics import rmse
+from .metrics import *
 
-__all__ = [rmse]
+__all__ = [rmse,
+           kendalltau
+           ]
