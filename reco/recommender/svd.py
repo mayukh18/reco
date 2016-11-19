@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from utils import super_str, convert_to_array, special_sort, dissimilarity
-from scipy.linalg import sqrtm
 from math import sqrt
 
 
