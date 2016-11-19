@@ -3,7 +3,7 @@ from reco.datasets import load_movielens
 
 
 data = load_movielens()
-svd = SVDRecommender(no_of_features=12)
+svd = SVDRecommender(no_of_features=4)
 user_item_matrix = svd.create_utility_matrix(data, formatizer={'user':'userId', 'item':'movieId', 'value':'rating'})
 svd.fit(user_item_matrix)
 

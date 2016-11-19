@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from utils import super_str, convert_to_array, special_sort, dissimilarity
 from scipy.linalg import sqrtm
+from math import sqrt
 
 
 
@@ -164,12 +165,10 @@ class SVDRecommender(object):
 
         k = self.no_of_features
         U, s, V = np.linalg.svd(self.utilMat, full_matrices=False)
-        s = np.diag(s)
-        s = s[0:k,0:k]
+
         U = U[:,0:k]
         V = V[0:k,:]
-
-        s_root=sqrtm(s)
+        s_root = np.diag([sqrt(s[i]) for i in range(0,k)])
 
         self.Usk=np.dot(U,s_root)
         self.skV=np.dot(s_root,V)
