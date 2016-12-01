@@ -22,7 +22,7 @@ Tutorials
 
 Here is a tutorial for th SVD recommender.
 
-SVD Tutorial <svdtut>
+`SVD Tutorial <svdtut.rst>`
 
 Modules
 -------------
