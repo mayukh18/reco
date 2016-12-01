@@ -1,6 +1,5 @@
 from reco.recommender import SVDRecommender
 from reco.datasets import load_movielens
-import numpy as np
 
 data = load_movielens()
 #print(data[30:])

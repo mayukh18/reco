@@ -8,7 +8,6 @@ Below is a tutorial on using the SVD recommender module.::
 
     from reco.recommender import SVDRecommender
     from reco.datasets import load_movielens
-    import numpy as np
 
     data = load_movielens()
 
