@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='reco',
-      version='0.1.16',
+      version='0.1.17',
       description='a simple yet powerful recommender systems library in python',
       url='http://github.com/mayukh18/reco',
       author='Mayukh Bhattacharyya',
