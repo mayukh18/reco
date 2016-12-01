@@ -20,9 +20,10 @@ After this you can import reco in your scripts.
 Tutorials
 ----------
 
-Here is a tutorial for th SVD recommender.
+.. toctree::
+    :maxdepth: 1
 
-`SVD Tutorial <svdtut.rst>`
+    SVD Tutorial <svdtut>
 
 Modules
 -------------
