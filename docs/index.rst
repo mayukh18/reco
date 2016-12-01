@@ -17,6 +17,13 @@ Installing reco through pip is easy. Use a terminal or command prompt and type o
 
 After this you can import reco in your scripts.
 
+Tutorials
+----------
+
+Here is a tutorial for th SVD recommender.
+
+SVD Tutorial <svdtut>
+
 Modules
 -------------
 
@@ -25,5 +32,6 @@ Modules
 
     Recommenders <recommender>
     Metrics <metrics>
+    Datasets <datasets>
 
 

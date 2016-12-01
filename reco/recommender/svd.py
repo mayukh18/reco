@@ -51,15 +51,10 @@ class SVDRecommender(object):
     def __init__(self,
                  no_of_features=15,
                  method='default',
-                 formatizer={'user':0,'item':1,'value':2}
                  ):
-        self.parameters={"no_of_features", "method",
-                     "coeff"}
+        self.parameters={"no_of_features", "method"}
         self.method = method
         self.no_of_features = no_of_features
-        self.formatizer = formatizer
-        self.item_means=list()
-        self.user_means=list()
 
 
     def get_params(self, deep=False):
@@ -119,10 +114,15 @@ class SVDRecommender(object):
         X = pd.DataFrame(pd_dict)
         X.index = users
 
-        return X
+        users = list(X.index)
+        items = list(X.columns)
+
+        return np.array(X), users, items
 
 
-    def fit(self, X):
+    def fit(self, user_item_matrix, userList, itemList):
+
+
 
         """
         :param X: nx3 array-like. Each row has three elements in the order given by the
@@ -133,21 +133,21 @@ class SVDRecommender(object):
         :return: Does not return anything. Just fits the data and forms U, s, V by SVDRecommender
         """
 
-        self.users = list(X.index)
-        self.items = list(X.columns)
+        self.users = list(userList)
+        self.items = list(itemList)
 
         self.user_index = {self.users[i]: i for i in range(len(self.users))}
         self.item_index = {self.items[i]: i for i in range(len(self.items))}
 
 
-        mask=np.isnan(X)
-        masked_arr=np.ma.masked_array(X, mask)
+        mask=np.isnan(user_item_matrix)
+        masked_arr=np.ma.masked_array(user_item_matrix, mask)
 
         self.predMask = ~mask
 
         self.item_means=np.mean(masked_arr, axis=0)
         self.user_means=np.mean(masked_arr, axis=1)
-        self.item_means_tiled = np.tile(self.item_means, (X.shape[0],1))
+        self.item_means_tiled = np.tile(self.item_means, (user_item_matrix.shape[0],1))
 
         # utility matrix or ratings matrix that can be fed to svd
         self.utilMat = masked_arr.filled(self.item_means)
@@ -178,7 +178,7 @@ class SVDRecommender(object):
 
 
 
-    def predict_ratings(self, X, formatizer = {'user': 0, 'item': 1}):
+    def predict(self, X, formatizer = {'user': 0, 'item': 1}):
         """
 
         :param X: the test set. 2D, array-like consisting of two eleents in each row
