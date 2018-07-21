@@ -22,7 +22,7 @@ def chunk(xs, n):
 def cross_val_score(model=None, data=None, cv=10, scorer=rmse):
 
     data=np.array(data)
-    print data.shape
+    print(data.shape)
     chunks=chunk(data, cv)
     #print chunks
     score=list()
@@ -42,7 +42,7 @@ def cross_val_score(model=None, data=None, cv=10, scorer=rmse):
         model.fit(iter_data)
         pred=model.predict(pred_data)
         score.append(rmse(pred_data[ : , model.formatizer['value']], pred))
-        print score[i]
+        print(score[i])
 
     return np.mean(score)
 

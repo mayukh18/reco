@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from utils import super_str, convert_to_array, special_sort, dissimilarity
+from .utils import super_str, convert_to_array, special_sort, dissimilarity
 from math import sqrt
 
 
@@ -13,7 +13,7 @@ from math import sqrt
 
 
 
-class SVDRecommender(object):
+class SVDRecommender:
 
     """
     Singular Value Decomposition is an important technique used in recommendation systems.

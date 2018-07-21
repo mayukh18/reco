@@ -1,9 +1,9 @@
 import pandas as pd
-from similarity_algorithms import sim_pearson,sim_jaccard,sim_cosine
+from .similarity_algorithms import sim_pearson,sim_jaccard,sim_cosine
 
 
 
-class CFRecommender():
+class CFRecommender:
 
     def __init__(self,
                  formatizer = {'user':0,'item':1,'value':2},
