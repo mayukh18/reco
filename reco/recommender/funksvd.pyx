@@ -99,21 +99,24 @@ class FunkSVD:
     def stochasticGD(self, X, formatizer, verbose):
         import time
 
+        start_time = time.clock()
+
         itemField = formatizer['item']
         userField = formatizer['user']
         valueField = formatizer['value']
 
         X = X[[userField, itemField, valueField]]
-        self.users = list(set(X.ix[:, userField]))
-        self.items = list(set(X.ix[:, itemField]))
+
+        cdef list users, items
+
+        users = list(set(X.ix[:, userField]))
+        items = list(set(X.ix[:, itemField]))
 
         cdef double global_mean = np.mean(X.ix[:, valueField])
-        cdef list users = self.users
-        cdef list items = self.items
         cdef double learning_rate = self.learning_rate
         cdef double regularizer = self.regularizer
-        cdef np.ndarray[np.double_t, ndim=2] userfeatures = np.zeros((len(users), self.k))/self.k
-        cdef np.ndarray[np.double_t, ndim=2] itemfeatures = np.zeros((len(items), self.k))/self.k
+        cdef np.ndarray[np.double_t, ndim=2] userfeatures = np.random.random((len(users), self.k))/self.k
+        cdef np.ndarray[np.double_t, ndim=2] itemfeatures = np.random.random((len(items), self.k))/self.k
         cdef np.ndarray[np.double_t, ndim=2] user_bias = np.zeros((len(users), 1))
         cdef np.ndarray[np.double_t, ndim=2] item_bias = np.zeros((1, len(items)))
 
@@ -122,18 +125,8 @@ class FunkSVD:
         cdef dict userindexes, itemindexes
         cdef list ratings
 
-        if self.bias == True:
-            for i in range(len(self.users)):
-                # check if this works
-                user = self.users[i]
-                user_bias[i,0] = np.mean(X[X[userField] == user][valueField]) - global_mean
-            for i in range(len(self.items)):
-                # check if this works
-                item = self.items[i]
-                item_bias[0,i] = np.mean(X[X[itemField] == item][valueField]) - global_mean
-
-        userindexes = {self.users[i]:i for i in range(len(self.users))}
-        itemindexes = {self.items[i]:i for i in range(len(self.items))}
+        userindexes = {users[i]:i for i in range(len(users))}
+        itemindexes = {items[i]:i for i in range(len(items))}
 
         ratings = [(userindexes[x[0]], itemindexes[x[1]], x[2]) for x in X.values]
 
@@ -141,6 +134,7 @@ class FunkSVD:
         print("N {}".format(N))
         exec_time = []
 
+        print("this time: ",time.clock() - start_time)
         for epoch in range(self.iterations):
             error = 0
             #start_time = time.clock()
@@ -174,6 +168,8 @@ class FunkSVD:
                 print("Epoch " + str(epoch) + ": Error: " + str(error))
                 #print("Epoch " + str(epoch))
 
+        self.users = users
+        self.items = items
         self.userfeatures = userfeatures
         self.itemfeatures = itemfeatures
         self.global_mean = global_mean
