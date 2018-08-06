@@ -97,9 +97,6 @@ class FunkSVD:
         self.itemdict = itemindexes
 
     def stochasticGD(self, X, formatizer, verbose):
-        import time
-
-        start_time = time.clock()
 
         itemField = formatizer['item']
         userField = formatizer['user']
@@ -131,13 +128,9 @@ class FunkSVD:
         ratings = [(userindexes[x[0]], itemindexes[x[1]], x[2]) for x in X.values]
 
         N = len(ratings)
-        print("N {}".format(N))
-        exec_time = []
 
-        print("this time: ",time.clock() - start_time)
         for epoch in range(self.iterations):
             error = 0
-            #start_time = time.clock()
             for userindex,itemindex,r in ratings:
                 res = 0
 
@@ -157,7 +150,6 @@ class FunkSVD:
                     res = r - y_hat - global_mean
 
                 error += abs(res)
-                #print(error)
 
                 for f in range(self.k):
                     userfeatures[userindex, f] += learning_rate * (res * itemfeatures[itemindex, f] - regularizer * userfeatures[userindex, f])
@@ -166,7 +158,6 @@ class FunkSVD:
             if verbose:
                 error = error / N
                 print("Epoch " + str(epoch) + ": Error: " + str(error))
-                #print("Epoch " + str(epoch))
 
         self.users = users
         self.items = items
@@ -178,7 +169,7 @@ class FunkSVD:
         self.userdict = userindexes
         self.itemdict = itemindexes
 
-    def predict(self, X, formatizer = {'user': 0, 'item': 1}):
+    def predict(self, X, formatizer = {'user': 0, 'item': 1}, verbose=False):
         """
 
         :param X: the test set. 2D, array-like consisting of two eleents in each row
@@ -189,10 +180,21 @@ class FunkSVD:
         :return: 1D, a list giving the value/rating corresponding to each user-item
                  pair in each row of X.
         """
+        cdef list testusers, testitems, users, items
+        cdef dict userdict, itemdict
+        cdef np.ndarray[np.double_t, ndim=2] userfeatures = self.userfeatures
+        cdef np.ndarray[np.double_t, ndim=2] itemfeatures = self.itemfeatures
+        cdef np.ndarray[np.double_t, ndim=2] user_bias = self.user_bias
+        cdef np.ndarray[np.double_t, ndim=2] item_bias = self.item_bias
+        cdef float global_mean = self.global_mean
 
-        users = X[formatizer['user']].tolist()
-        items = X[formatizer['item']].tolist()
+        testusers = X[formatizer['user']].tolist()
+        testitems = X[formatizer['item']].tolist()
 
+        users = self.users
+        items = self.items
+        userdict = self.userdict
+        itemdict = self.itemdict
 
         # user and item in the test set may not always occur in the train set. In these cases
         # we can not find those values from the utility matrix.
@@ -202,6 +204,8 @@ class FunkSVD:
         # 3. only item in train
         # 4. none in train
 
+        cdef list predictions
+        cdef int userindex, itemindex
         predictions = []
 
         import time
@@ -209,47 +213,47 @@ class FunkSVD:
 
         if self.bias:
 
-            for i in range(len(users)):
-                user = users[i]
-                item = items[i]
-
-                if user in self.users and item in self.items:
-                    userindex = self.userdict[user]
-                    itemindex = self.itemdict[item]
-                    pred = np.sum(self.userfeatures[userindex] * self.itemfeatures[itemindex]) + self.global_mean + \
-                        self.user_bias[userindex, 0] + self.item_bias[0, itemindex]
-                elif user in self.users:
-                    userindex = self.users.index(user)
-                    pred = self.global_mean + self.user_bias[userindex, 0]
-                elif item in self.items:
-                    itemindex = self.items.index(item)
-                    pred = self.global_mean + self.item_bias[0, itemindex]
+            for i in range(len(testusers)):
+                user = testusers[i]
+                item = testitems[i]
+                if user in userdict and item in itemdict:
+                    userindex = userdict[user]
+                    itemindex = itemdict[item]
+                    ssum = 0
+                    for f in range(self.k):
+                        ssum += userfeatures[userindex, f]*itemfeatures[itemindex, f]
+                    pred = ssum + global_mean + user_bias[userindex, 0] + item_bias[0, itemindex]
+                    predictions.append(ssum + global_mean + user_bias[userindex, 0] + item_bias[0, itemindex])
+                elif user in userdict:
+                    predictions.append(global_mean + user_bias[userdict[user], 0])
+                elif item in itemdict:
+                    predictions.append(global_mean + item_bias[0, itemdict[item]])
                 else:
-                    pred = self.global_mean
+                    predictions.append(global_mean)
 
-                predictions.append(pred)
+                #predictions.append(pred)
 
         else:
 
-            for i in range(len(users)):
-                user = users[i]
-                item = items[i]
+            for i in range(len(testusers)):
+                user = testusers[i]
+                item = testitems[i]
 
-                if user in self.users and item in self.items:
-                    userindex = self.userdict[user]
-                    itemindex = self.itemdict[item]
-                    pred = self.global_mean + np.sum(self.userfeatures[userindex] * self.itemfeatures[itemindex])
-                elif user in self.users:
-                    userindex = self.users.index(user)
-                    pred = self.global_mean + np.sum(self.userfeatures[userindex] * np.mean(self.itemfeatures, axis=0))
-                elif item in self.items:
-                    itemindex = self.items.index(item)
-                    pred = self.global_mean + np.sum(self.itemfeatures[itemindex] * np.mean(self.userfeatures, axis=0))
+                if user in users and item in items:
+                    userindex = userdict[user]
+                    itemindex = itemdict[item]
+                    pred = global_mean + np.sum(userfeatures[userindex] * itemfeatures[itemindex])
+                elif user in users:
+                    userindex = userdict[user]
+                    pred = global_mean + np.sum(userfeatures[userindex] * np.mean(itemfeatures, axis=0))
+                elif item in items:
+                    itemindex = itemdict[item]
+                    pred = global_mean + np.sum(itemfeatures[itemindex] * np.mean(userfeatures, axis=0))
                 else:
-                    pred = self.global_mean
+                    pred = global_mean
 
                 predictions.append(pred)
 
-        print("time {}".format(time.clock() - start_time))
+        print("time taken {} secs".format(time.clock() - start_time))
 
         return predictions
