@@ -6,7 +6,23 @@ from utils import create_utility_matrix
 @cython.boundscheck(False)
 @cython.wraparound(False)
 
-class FunkSVD:
+cdef class FunkSVD:
+    cdef public int k
+    cdef public int iterations
+    cdef public str method
+    cdef public double learning_rate
+    cdef public double regularizer
+    cdef public bint bias
+
+    cdef public double global_mean
+    cdef public list users, items
+    cdef public dict userdict, itemdict
+    cdef public np.ndarray userfeatures
+    cdef public np.ndarray itemfeatures
+    cdef public np.ndarray user_bias
+    cdef public np.ndarray item_bias
+    cdef public np.ndarray mask
+
     def __init__(self,
                  k=32,
                  iterations = 100,
