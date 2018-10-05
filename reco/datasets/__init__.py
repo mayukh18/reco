@@ -1,4 +1,5 @@
-from .load_datasets import load_movielens
+from .load_datasets import load_movielens, loadMovieLens100k
 
 
-__all__ = [load_movielens]
+__all__ = [load_movielens,
+           loadMovieLens100k]

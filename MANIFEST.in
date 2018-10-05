@@ -1,1 +1,2 @@
 include reco/datasets/movielens100k.csv
+include reco/datasets/ml-100k/*
