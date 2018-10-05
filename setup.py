@@ -16,6 +16,11 @@ extensions = [
         'reco.recommender.funksvd',
         ['reco/recommender/funksvd.pyx'],
         include_dirs=[np.get_include()]
+    ),
+    Extension(
+        'reco.recommender.fm',
+        ['reco/recommender/fm.pyx'],
+        include_dirs=[np.get_include()]
     )
 ]
 ext_modules = cythonize(extensions)
