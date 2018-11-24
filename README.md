@@ -6,6 +6,7 @@ Currently it has:
   2. SVD ( based on scipy's implementation )
   3. Simon Funk's SVD
   4. Factorization Machine
+  5. Wide and Deep Network
 
 Install the latest version by running
 
@@ -26,6 +27,7 @@ References:
 
 4. Steffen Rendle. Factorization Machines, 2010. [[pdf]](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
 
+5. Heng-Tze Cheng et al. Wide & Deep Learning for Recommender Systems, 2016. [[pdf]](https://arxiv.org/pdf/1606.07792.pdf)
 
 #### Two small examples to get you started
 
