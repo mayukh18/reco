@@ -26,13 +26,13 @@ extensions = [
 ext_modules = cythonize(extensions)
 
 setup(name='reco',
-      version='0.1.17',
+      version='0.2.1',
       description='a simple yet powerful recommender systems library in python',
       url='http://github.com/mayukh18/reco',
       author='Mayukh Bhattacharyya',
       author_email='mayukh.superb@gmail.com',
       license='MIT',
-      download_url = 'https://github.com/mayukh18/reco/tarball/0.1.17',
+      download_url = 'https://github.com/mayukh18/reco/tarball/0.2.1',
       include_package_data = True,
       keywords=['recommendation'],
       packages=['reco',
