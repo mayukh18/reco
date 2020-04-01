@@ -1,5 +1,7 @@
 # reco
-## a simple yet versatile recommendation systems library in python
+### a simple yet versatile recommendation systems library in python
+
+[![GitHub Release](https://img.shields.io/badge/release-v0.2.1-blue)](https://github.com/mayukh18/reco/blob/master)[![Downloads](https://pepy.tech/badge/reco)](https://pepy.tech/project/reco)[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/mayukh18/reco/blob/master/LICENSE)
 
 Currently it has:
   1. user-user / item-item collaborative filtering
