@@ -33,13 +33,13 @@ class CFRecommender:
         count=0
         past_user=-999
         for i in range(0,len(data)):
-            item=str(data.ix[i][self.formatizer['item']])
-            user=str(data.ix[i][self.formatizer['user']])
+            item=str(data.loc[i][self.formatizer['item']])
+            user=str(data.loc[i][self.formatizer['user']])
             if user!=past_user:
                 ratings[user]={}
             count=count+1
 
-            ratings[user][item]=float(data.ix[i][self.formatizer['value']])
+            ratings[user][item]=float(data.loc[i][self.formatizer['value']])
             past_user=user
 
         self.ratings = ratings
@@ -74,7 +74,7 @@ class CFRecommender:
         out = []
 
         for i in range(len(X)):
-            ans = self.predict_single(X.ix[i][self.formatizer['user']], X.ix[i][self.formatizer['item']])
+            ans = self.predict_single(X.loc[i][self.formatizer['user']], X.loc[i][self.formatizer['item']])
             out.append(ans)
 
         return out

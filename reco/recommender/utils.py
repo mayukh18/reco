@@ -75,12 +75,12 @@ def create_utility_matrix(data, formatizer = {'user':0, 'item': 1, 'value': 2}):
     userField = formatizer['user']
     valueField = formatizer['value']
 
-    userList = data.ix[:,userField].tolist()
-    itemList = data.ix[:,itemField].tolist()
-    valueList = data.ix[:,valueField].tolist()
+    userList = data.loc[:,userField].tolist()
+    itemList = data.loc[:,itemField].tolist()
+    valueList = data.loc[:,valueField].tolist()
 
-    users = list(set(data.ix[:,userField]))
-    items = list(set(data.ix[:,itemField]))
+    users = list(set(data.loc[:,userField]))
+    items = list(set(data.loc[:,itemField]))
 
     users_index = {users[i]: i for i in range(len(users))}
 
