@@ -275,10 +275,13 @@ cdef class FunkSVD:
 
         return predictions
 
-    def recommend(self, users_list, N=10, values = False):
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def recommend(self, users_list, N=10, batch_size = 32, values = False):
         """
         :param  users_list: the list of users for which items will be recommended
                 N: number of top items that will be given as output
+                batch_size: batch size for processing the list of users
                 values: if True, the predicted values will be given as output
 
         :return: list of lists giving the top N recommended items for each user in the users list.
@@ -286,28 +289,35 @@ cdef class FunkSVD:
                  to discard previous items. So take a bigger N and then discard.
         """
 
-        cdef list users, items, output
-        cdef dict userdict, itemdict
+        cdef list users, items, per_user_items, output, batch_indices
+        cdef dict userdict, itemdict, userindexes
         cdef np.ndarray[np.double_t, ndim=2] userfeatures = self.userfeatures
         cdef np.ndarray[np.double_t, ndim=2] itemfeatures = self.itemfeatures
         cdef np.ndarray[np.double_t, ndim=2] user_bias = self.user_bias
         cdef np.ndarray[np.double_t, ndim=2] item_bias = self.item_bias
-
-        cdef np.ndarray[np.double_t, ndim=1] pred_values
+        cdef np.ndarray[np.double_t, ndim=2] batch_values
+        cdef np.ndarray[np.double_t, ndim=1] per_user_values
 
         cdef float global_mean = self.global_mean
-        cdef dict userindexes
-        cdef int user_index
+        cdef int user_index, item_index
 
         users = self.users
         items = self.items
+
         userindexes = {users[i]:i for i in range(len(users))}
         output = []
+        batch_indices = []
 
-        for user in users_list:
+        for i,user in enumerate(users_list):
             user_index = userindexes[user]
-            pred_values = np.dot(userfeatures[user_index, :], itemfeatures.T) + global_mean + user_bias[user_index, 0] + item_bias[0, :]
-            pred_items = np.array(items)[np.argsort(pred_values)][::-1][:N]
-            output.append(pred_items)
+            batch_indices.append(user_index)
+
+            if i % batch_size == batch_size-1 or i == len(users_list)-1:
+              batch_values = np.dot(userfeatures[batch_indices, :], itemfeatures.T) + global_mean + user_bias[batch_indices,:] + item_bias
+              for per_user_values in batch_values:
+                per_user_items = list(np.array(items)[np.argsort(per_user_values)][::-1][:N])
+                output.append(per_user_items)
+
+              batch_indices = []
 
         return output
