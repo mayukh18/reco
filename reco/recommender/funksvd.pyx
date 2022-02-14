@@ -270,6 +270,7 @@ cdef class FunkSVD:
 
                 predictions.append(pred)
 
-        print("time taken {} secs".format(time.clock() - start_time))
+        if verbose:
+            print("time taken {} secs".format(time.clock() - start_time))
 
         return predictions
