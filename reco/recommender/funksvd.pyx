@@ -274,3 +274,40 @@ cdef class FunkSVD:
             print("time taken {} secs".format(time.clock() - start_time))
 
         return predictions
+
+    def recommend(self, users_list, N=10, values = False):
+        """
+        :param  users_list: the list of users for which items will be recommended
+                N: number of top items that will be given as output
+                values: if True, the predicted values will be given as output
+
+        :return: list of lists giving the top N recommended items for each user in the users list.
+                 Since there is no record of items already interacted with by the user, there is no way
+                 to discard previous items. So take a bigger N and then discard.
+        """
+
+        cdef list users, items, output
+        cdef dict userdict, itemdict
+        cdef np.ndarray[np.double_t, ndim=2] userfeatures = self.userfeatures
+        cdef np.ndarray[np.double_t, ndim=2] itemfeatures = self.itemfeatures
+        cdef np.ndarray[np.double_t, ndim=2] user_bias = self.user_bias
+        cdef np.ndarray[np.double_t, ndim=2] item_bias = self.item_bias
+
+        cdef np.ndarray[np.double_t, ndim=1] pred_values
+
+        cdef float global_mean = self.global_mean
+        cdef dict userindexes
+        cdef int user_index
+
+        users = self.users
+        items = self.items
+        userindexes = {users[i]:i for i in range(len(users))}
+        output = []
+
+        for user in users_list:
+            user_index = userindexes[user]
+            pred_values = np.dot(userfeatures[user_index, :], itemfeatures.T) + global_mean + user_bias[user_index, 0] + item_bias[0, :]
+            pred_items = np.array(items)[np.argsort(pred_values)][::-1][:N]
+            output.append(pred_items)
+
+        return output
