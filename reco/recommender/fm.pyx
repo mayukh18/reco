@@ -99,7 +99,7 @@ cdef class FM:
 
 
         for epoch in range(self.iterations):
-            start_time = time.clock()
+            start_time = time.time()
 
             preds = []
             for i in range(m):
@@ -152,7 +152,7 @@ cdef class FM:
                     #    for f in range(self.k):
                     #        v[index, f] -= b*v[index, f]
 
-            print("epoch {} time {} mse {}".format(epoch, time.clock()-start_time, np.mean(preds)))
+            print("epoch {} time {} mse {}".format(epoch, time.time()-start_time, np.mean(preds)))
         self.w0 = w0
         self.w1 = w1
         self.v = v
